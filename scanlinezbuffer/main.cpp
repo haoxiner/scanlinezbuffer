@@ -8,7 +8,7 @@
 static unsigned const int xResolution = 1024, yResolution = 768;
 
 static int32_t *pBits;
-static Rasterizer renderer;
+static Rasterizer *renderer;
 static Scene scene;
 static Camera camera;
 
@@ -52,13 +52,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 	ShowWindow(hwnd, iCmdShow);
 	UpdateWindow(hwnd);
 
+	renderer = new Rasterizer(xResolution, yResolution);
 	InitializeDevice(hwnd);
 
 	while (GetMessage(&msg,nullptr,0,0))
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-		renderer.Render(scene, camera, pBits);
+		renderer->Render(scene, camera, pBits);
 	}
 	return msg.wParam;
 }
