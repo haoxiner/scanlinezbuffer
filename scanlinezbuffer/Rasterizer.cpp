@@ -13,7 +13,7 @@ Rasterizer::Rasterizer(unsigned int xResolution, unsigned int yResolution) :
 
 Rasterizer::~Rasterizer()
 {
-	delete m_zbuffer;
+	delete [] m_zbuffer;
 }
 
 void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData)
