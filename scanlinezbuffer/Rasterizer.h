@@ -7,6 +7,43 @@ class Scene;
 class Camera;
 class Image;
 
+struct ShapeTableItem
+{
+	float a, b, c, d;
+	unsigned int id;
+	unsigned int dy;
+	float r, g, b;
+};
+
+struct EdgeTableItem
+{
+	float x;
+	float dx;
+	unsigned int dy;
+	unsigned int id;
+};
+
+struct ActiveShapeTableItem
+{
+	unsigned int dy;
+};
+
+struct ActiveEdgeTableItem
+{
+	float xl;
+	float dxl;
+	unsigned int dyl;
+	float xr;
+	float dxr;
+	unsigned int dyr;
+
+	float zl;
+	float dzx;
+	float dxy;
+
+	unsigned int id;
+};
+
 class Rasterizer
 {
 public:
@@ -17,4 +54,10 @@ private:
 	std::vector<Triangle> m_mesh;
 	float *m_zbuffer;
 	unsigned int m_xResolution, m_yResolution;
+
+	std::vector<ShapeTableItem> *m_shapeTable;
+	std::vector<EdgeTableItem> *m_edgeTable;
+	std::vector<ActiveShapeTableItem> m_activeShapeTable;
+	std::vector<ActiveEdgeTableItem> m_activeEdgeTable;
+
 };

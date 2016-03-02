@@ -5,7 +5,7 @@
 #include <Windows.h>
 #include <cstdint>
 
-static unsigned const int xResolution = 1024, yResolution = 768;
+static const unsigned int xResolution = 1024, yResolution = 768;
 
 static int32_t *pBits;
 static Rasterizer *renderer;
