@@ -69,6 +69,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 	{
 		if (!m_shapeTable[i].empty())
 		{
+			// add new shape
 			for (auto shapeItem : m_shapeTable[i])
 			{
 				ActiveShapeTableItem astItem;
