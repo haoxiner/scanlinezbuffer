@@ -131,7 +131,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 				// draw scanline
 				zValue += aetItemIter->dzx;
 				// zValue > 0 must be cliped
-				if (zValue < 0 && zValue > m_zbuffer[x])
+				if (zValue < 0 && (zValue > m_zbuffer[x] || m_zbuffer[x] == 0))
 				{
 					m_zbuffer[x] = zValue;
 					pData[baseIndex + x] = (255 << 16);
@@ -147,7 +147,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 					{
 						aetItemIter->xl = edgeItemIter->x;
 						aetItemIter->dxl = edgeItemIter->dx;
-						aetItemIter->dyl = edgeItemIter->dy;
+						aetItemIter->dyl = edgeItemIter->dy - 1;
 						break;
 					}
 				}
@@ -160,7 +160,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 					{
 						aetItemIter->xr = edgeItemIter->x;
 						aetItemIter->dxr = edgeItemIter->dx;
-						aetItemIter->dyr = edgeItemIter->dy;
+						aetItemIter->dyr = edgeItemIter->dy - 1;
 						break;
 					}
 				}
