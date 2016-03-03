@@ -13,7 +13,6 @@ struct ShapeTableItem
 	float a, b, c, d;
 	unsigned int id;
 	unsigned int dy;
-	float r, g, b;
 };
 
 struct EdgeTableItem
@@ -57,8 +56,8 @@ private:
 	float *m_zbuffer;
 	unsigned int m_xResolution, m_yResolution;
 
-	std::vector<ShapeTableItem> *m_shapeTable;
-	std::vector<EdgeTableItem> *m_edgeTable;
+	std::vector<std::vector<ShapeTableItem>> m_shapeTable;
+	std::vector<std::vector<EdgeTableItem>> m_edgeTable;
 	std::list<ActiveShapeTableItem> m_activeShapeTable;
 	std::list<ActiveEdgeTableItem> m_activeEdgeTable;
 

@@ -5,10 +5,12 @@
 #include <algorithm>
 
 Rasterizer::Rasterizer(unsigned int xResolution, unsigned int yResolution) :
-	m_xResolution(xResolution), m_yResolution(yResolution), m_zbuffer(new float[xResolution]),
+	m_xResolution(xResolution), m_yResolution(yResolution), m_zbuffer(new float[xResolution])/*,
 	m_shapeTable(new std::vector<ShapeTableItem>[yResolution]),
-	m_edgeTable(new std::vector<EdgeTableItem>[yResolution])
+	m_edgeTable(new std::vector<EdgeTableItem>[yResolution])*/
 {
+	m_shapeTable.resize(yResolution);
+	m_edgeTable.resize(yResolution);
 	Triangle t(100.0f, 100.f, -1.0f, 800.0f, 100.0f, -1.0f, 800.0f, 500.0f, -1.0f);
 	m_mesh.push_back(t);
 }
@@ -16,8 +18,8 @@ Rasterizer::Rasterizer(unsigned int xResolution, unsigned int yResolution) :
 Rasterizer::~Rasterizer()
 {
 	delete[] m_zbuffer;
-	delete[] m_edgeTable;
-	delete[] m_shapeTable;
+	//delete[] m_edgeTable;
+	//delete[] m_shapeTable;
 }
 
 void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData)
@@ -61,6 +63,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 		// p0p2
 		if (p0.y != p2.y)
 		{
+			edgeTableItem.x = p0.x;
 			edgeTableItem.dx = (p0.x - p2.x) / (p0.y - p2.y);
 			edgeTableItem.dy = p2.y - p0.y;
 			m_edgeTable[static_cast<int>(p0.y)].push_back(edgeTableItem);
@@ -68,6 +71,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 		// p1p2
 		if (p1.y != p2.y)
 		{
+			edgeTableItem.x = p1.x;
 			edgeTableItem.dx = (p0.x - p2.x) / (p0.y - p2.y);
 			edgeTableItem.dy = p2.y - p0.y;
 			m_edgeTable[static_cast<int>(p0.y)].push_back(edgeTableItem);
@@ -118,7 +122,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 				m_activeEdgeTable.push_front(aetItem);
 			}
 		}
-		unsigned int baseIndex = y*m_yResolution;
+		unsigned int baseIndex = y*m_xResolution;
 		for (auto aetItemIter = m_activeEdgeTable.begin();aetItemIter != m_activeEdgeTable.end();++aetItemIter)
 		{
 			float zValue = aetItemIter->zl;
@@ -126,7 +130,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 			{
 				// draw scanline
 				zValue += aetItemIter->dzx;
-				// zValue > 0 must be cliped 
+				// zValue > 0 must be cliped
 				if (zValue < 0 && zValue > m_zbuffer[x])
 				{
 					m_zbuffer[x] = zValue;
