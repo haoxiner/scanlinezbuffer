@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
+#include <list>
 #include "Triangle.h"
 
 class Scene;
@@ -33,13 +34,14 @@ struct ActiveEdgeTableItem
 	float xl;
 	float dxl;
 	unsigned int dyl;
+
 	float xr;
 	float dxr;
 	unsigned int dyr;
 
 	float zl;
 	float dzx;
-	float dxy;
+	float dzy;
 
 	unsigned int id;
 };
@@ -57,7 +59,7 @@ private:
 
 	std::vector<ShapeTableItem> *m_shapeTable;
 	std::vector<EdgeTableItem> *m_edgeTable;
-	std::vector<ActiveShapeTableItem> m_activeShapeTable;
-	std::vector<ActiveEdgeTableItem> m_activeEdgeTable;
+	std::list<ActiveShapeTableItem> m_activeShapeTable;
+	std::list<ActiveEdgeTableItem> m_activeEdgeTable;
 
 };
