@@ -11,7 +11,7 @@ Rasterizer::Rasterizer(unsigned int xResolution, unsigned int yResolution) :
 {
 	m_shapeTable.resize(yResolution);
 	m_edgeTable.resize(yResolution);
-	Triangle t(100.0f, 100.f, -1.0f, 800.0f, 100.0f, -1.0f, 800.0f, 500.0f, -1.0f);
+	Triangle t(100.0f, 100.f, -1.0f, 800.0f, 100.0f, -1.0f, 500.0f, 500.0f, -1.0f);
 	m_mesh.push_back(t);
 }
 
@@ -46,7 +46,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 		shapeTableItem.c = n.z;
 		shapeTableItem.d = -p0.x * n.x - p0.y*n.y - p0.z*n.z;
 		shapeTableItem.id = i;
-		shapeTableItem.dy = std::fmaxf(p1.y - p0.y, p2.y - p0.y);
+		shapeTableItem.dy = static_cast<int>(std::fmaxf(p1.y - p0.y, p2.y - p0.y)) + 1;
 		m_shapeTable[static_cast<int>(p0.y)].push_back(shapeTableItem);
 
 		// edge table
@@ -57,7 +57,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 		{
 			edgeTableItem.x = p0.x;
 			edgeTableItem.dx = (p0.x - p1.x) / (p0.y - p1.y);
-			edgeTableItem.dy = p1.y - p0.y;
+			edgeTableItem.dy = static_cast<int>(p1.y - p0.y) + 1;
 			m_edgeTable[static_cast<int>(p0.y)].push_back(edgeTableItem);
 		}
 		// p0p2
@@ -65,26 +65,27 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 		{
 			edgeTableItem.x = p0.x;
 			edgeTableItem.dx = (p0.x - p2.x) / (p0.y - p2.y);
-			edgeTableItem.dy = p2.y - p0.y;
+			edgeTableItem.dy = static_cast<int>(p2.y - p0.y) + 1;
 			m_edgeTable[static_cast<int>(p0.y)].push_back(edgeTableItem);
 		}
 		// p1p2
 		if (p1.y != p2.y)
 		{
 			edgeTableItem.x = p1.x;
-			edgeTableItem.dx = (p0.x - p2.x) / (p0.y - p2.y);
-			edgeTableItem.dy = p2.y - p0.y;
-			m_edgeTable[static_cast<int>(p0.y)].push_back(edgeTableItem);
+			edgeTableItem.dx = (p1.x - p2.x) / (p1.y - p2.y);
+			edgeTableItem.dy = static_cast<int>(p2.y - p1.y) + 1;
+			m_edgeTable[static_cast<int>(p1.y)].push_back(edgeTableItem);
 		}
 	}
 
 	// clear frame buffer
 	memset(pData, 0, m_xResolution*m_yResolution * sizeof(int32_t));
-	// clear zbuffer
-	memset(m_zbuffer, 0, m_xResolution*sizeof(float));
 
 	for (size_t y = 0; y < m_yResolution; ++y)
 	{
+		// clear zbuffer
+		memset(m_zbuffer, 0, m_xResolution*sizeof(float));
+
 		if (!m_shapeTable[y].empty())
 		{
 			auto edgeItemIter = m_edgeTable[y].begin();
@@ -129,13 +130,15 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 			for (int x = static_cast<int>(aetItemIter->xl); x <= static_cast<int>(aetItemIter->xr); ++x)
 			{
 				// draw scanline
-				zValue += aetItemIter->dzx;
+				
 				// zValue > 0 must be cliped
 				if (zValue < 0 && (zValue > m_zbuffer[x] || m_zbuffer[x] == 0))
 				{
 					m_zbuffer[x] = zValue;
 					pData[baseIndex + x] = (255 << 16);
 				}
+
+				zValue += aetItemIter->dzx;
 			}
 			--aetItemIter->dyl;
 			--aetItemIter->dyr;
@@ -167,12 +170,27 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 			}
 			else if (aetItemIter->dyl == 0 && aetItemIter->dyr == 0)
 			{
-				m_activeEdgeTable.erase(aetItemIter);
-				continue;
+				aetItemIter = m_activeEdgeTable.erase(aetItemIter);
+				if (aetItemIter != m_activeEdgeTable.end())
+				{
+					--aetItemIter;
+					continue;
+				}
+				else
+				{
+					break;
+				}
 			}
-			aetItemIter->xl += aetItemIter->dxl;
-			aetItemIter->xr += aetItemIter->dxr;
+			aetItemIter->xl += std::fabsf(aetItemIter->dxl);
+			// cautious!!
+			aetItemIter->xr -= std::fabsf(aetItemIter->dxr);
 			aetItemIter->zl += (aetItemIter->dxl*aetItemIter->dzx + aetItemIter->dzy);
 		}
 	}
+	m_shapeTable.clear();
+	m_edgeTable.clear();
+	
+	int i = m_activeEdgeTable.size();
+	m_activeShapeTable.clear();
+	m_activeEdgeTable.clear();
 }
