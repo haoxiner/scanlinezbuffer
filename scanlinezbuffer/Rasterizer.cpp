@@ -11,7 +11,7 @@ Rasterizer::Rasterizer(unsigned int xResolution, unsigned int yResolution) :
 {
 	m_shapeTable.resize(yResolution);
 	m_edgeTable.resize(yResolution);
-	Triangle t(100.0f, 100.f, -1.0f, 800.0f, 100.0f, -1.0f, 500.0f, 500.0f, -1.0f);
+	Triangle t(100.0f, 100.f, -1.0f, 800.0f, 100.0f, -1.0f, 800.0f, 500.0f, -100.0f);
 	m_mesh.push_back(t);
 }
 
@@ -109,7 +109,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 				aetItem.dyr = edgeItemIter->dy;
 				++edgeItemIter;
 
-				if (aetItem.xl > aetItem.xr)
+				if ((aetItem.xl > aetItem.xr) || (aetItem.xl == aetItem.xr && aetItem.dxl > aetItem.dxr))
 				{
 					std::swap(aetItem.xl, aetItem.xr);
 					std::swap(aetItem.dxl, aetItem.dxr);
@@ -124,7 +124,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 			}
 		}
 		unsigned int baseIndex = y*m_xResolution;
-		for (auto aetItemIter = m_activeEdgeTable.begin();aetItemIter != m_activeEdgeTable.end();++aetItemIter)
+		for (auto aetItemIter = m_activeEdgeTable.begin();aetItemIter != m_activeEdgeTable.end();)
 		{
 			float zValue = aetItemIter->zl;
 			for (int x = static_cast<int>(aetItemIter->xl); x <= static_cast<int>(aetItemIter->xr); ++x)
@@ -171,26 +171,23 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 			else if (aetItemIter->dyl == 0 && aetItemIter->dyr == 0)
 			{
 				aetItemIter = m_activeEdgeTable.erase(aetItemIter);
-				if (aetItemIter != m_activeEdgeTable.end())
-				{
-					--aetItemIter;
-					continue;
-				}
-				else
-				{
-					break;
-				}
+				continue;
 			}
-			aetItemIter->xl += std::fabsf(aetItemIter->dxl);
+			aetItemIter->xl += aetItemIter->dxl;
 			// cautious!!
-			aetItemIter->xr -= std::fabsf(aetItemIter->dxr);
+			aetItemIter->xr += aetItemIter->dxr;
 			aetItemIter->zl += (aetItemIter->dxl*aetItemIter->dzx + aetItemIter->dzy);
+
+			++aetItemIter;
 		}
 	}
+
 	m_shapeTable.clear();
 	m_edgeTable.clear();
+
+	m_shapeTable.resize(m_yResolution);
+	m_edgeTable.resize(m_yResolution);
 	
-	int i = m_activeEdgeTable.size();
 	m_activeShapeTable.clear();
 	m_activeEdgeTable.clear();
 }
