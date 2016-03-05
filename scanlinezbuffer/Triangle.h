@@ -9,6 +9,7 @@ public:
 		float x2, float y2, float z2);
 	//~Triangle();
 	// p0.y <= p1.y <= p2.y
+	float c;
 	Point p0, p1, p2;
 	bool operator<(const Triangle &t)
 	{

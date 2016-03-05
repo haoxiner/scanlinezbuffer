@@ -11,8 +11,24 @@ Rasterizer::Rasterizer(unsigned int xResolution, unsigned int yResolution) :
 {
 	m_shapeTable.resize(yResolution);
 	m_edgeTable.resize(yResolution);
-	Triangle t(100.0f, 100.f, -1.0f, 800.0f, 100.0f, -1.0f, 800.0f, 500.0f, -100.0f);
+	for (size_t j = 0; j < 10; j++)
+	{
+		float yTranslate = j * 70;
+		for (size_t i = 0; i < 32; ++i)
+		{
+			float xTranslate = i * 30;
+			Triangle t(
+				20.0f + xTranslate, 60.f + yTranslate, -2.0f,
+				40.0f + xTranslate, 80.0f + yTranslate, -2.0f,
+				30.0f + xTranslate, 120.0f + yTranslate, -2.0f);
+			t.c = (255 << 16);
+			m_mesh.push_back(t);
+		}
+	}
+	Triangle t(100.0f, 100.0f, -3.0f, 500.0f, 200.0f, -1.0f, 300.0f, 500.0f, -1.0f);
+	t.c = 255;
 	m_mesh.push_back(t);
+
 }
 
 Rasterizer::~Rasterizer()
@@ -46,6 +62,8 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 		shapeTableItem.c = n.z;
 		shapeTableItem.d = -p0.x * n.x - p0.y*n.y - p0.z*n.z;
 		shapeTableItem.id = i;
+		//color
+		shapeTableItem.color = m_mesh[i].c;
 		shapeTableItem.dy = static_cast<int>(std::fmaxf(p1.y - p0.y, p2.y - p0.y)) + 1;
 		m_shapeTable[static_cast<int>(p0.y)].push_back(shapeTableItem);
 
@@ -98,6 +116,8 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 
 				ActiveEdgeTableItem aetItem;
 				aetItem.id = shapeItem.id;
+				// color
+				aetItem.color = shapeItem.color;
 
 				aetItem.xl = edgeItemIter->x;
 				aetItem.dxl = edgeItemIter->dx;
@@ -135,7 +155,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 				if (zValue < 0 && (zValue > m_zbuffer[x] || m_zbuffer[x] == 0))
 				{
 					m_zbuffer[x] = zValue;
-					pData[baseIndex + x] = (255 << 16);
+					pData[baseIndex + x] = aetItemIter->color;
 				}
 
 				zValue += aetItemIter->dzx;

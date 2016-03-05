@@ -13,6 +13,7 @@ struct ShapeTableItem
 	float a, b, c, d;
 	unsigned int id;
 	unsigned int dy;
+	float color;
 };
 
 struct EdgeTableItem
@@ -43,6 +44,7 @@ struct ActiveEdgeTableItem
 	float dzy;
 
 	unsigned int id;
+	float color;
 };
 
 class Rasterizer
