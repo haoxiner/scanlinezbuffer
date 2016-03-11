@@ -24,10 +24,10 @@ struct EdgeTableItem
 	unsigned int id;
 };
 
-struct ActiveShapeTableItem
-{
-	unsigned int dy;
-};
+//struct ActiveShapeTableItem
+//{
+//	unsigned int dy;
+//};
 
 struct ActiveEdgeTableItem
 {
@@ -57,10 +57,11 @@ private:
 	std::vector<Triangle> m_mesh;
 	float *m_zbuffer;
 	unsigned int m_xResolution, m_yResolution;
+	int32_t *m_screen;
 
 	std::vector<std::vector<ShapeTableItem>> m_shapeTable;
 	std::vector<std::vector<EdgeTableItem>> m_edgeTable;
-	std::list<ActiveShapeTableItem> m_activeShapeTable;
+	//std::list<ActiveShapeTableItem> m_activeShapeTable;
 	std::list<ActiveEdgeTableItem> m_activeEdgeTable;
 
 };

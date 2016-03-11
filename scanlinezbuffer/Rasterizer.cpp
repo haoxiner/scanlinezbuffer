@@ -5,13 +5,32 @@
 #include <algorithm>
 
 Rasterizer::Rasterizer(unsigned int xResolution, unsigned int yResolution) :
-	m_xResolution(xResolution), m_yResolution(yResolution), m_zbuffer(new float[xResolution])/*,
-	m_shapeTable(new std::vector<ShapeTableItem>[yResolution]),
-	m_edgeTable(new std::vector<EdgeTableItem>[yResolution])*/
+	m_xResolution(xResolution), m_yResolution(yResolution), m_zbuffer(new float[xResolution]),
+	m_screen(new int32_t[xResolution*yResolution])
 {
+	Camera camera(xResolution,yResolution);
+	camera.LookAt(Point(0, 0, 0), Vector(0, 0, -1), Vector(0, 1, 0));
+	float ratio = static_cast<float>(xResolution) / static_cast<float>(yResolution);
+	camera.Frustum(-ratio, ratio, 1, -1, 0.01f, 100.0f);
+	Transform worldToNDC = camera.WorldToProjection();
+
 	m_shapeTable.resize(yResolution);
 	m_edgeTable.resize(yResolution);
-	for (size_t j = 0; j < 10; j++)
+
+	Point p0(0,0,-1), p1(150,0,-1), p2(15,50,-1);
+
+	Triangle t0(worldToNDC(p0), worldToNDC(p1), worldToNDC(p2));
+	for (size_t i = 0; i < 3; i++)
+	{
+		t0.p[i].x = (t0.p[i].x + 1) / 2 * xResolution;
+		t0.p[i].y = (t0.p[i].y + 1) / 2 * yResolution;
+		t0.p[i].z -= 1;
+	}
+	t0.SortVertex();
+	t0.color = (255 << 16);
+	m_mesh.push_back(t0);
+	
+	/*for (size_t j = 0; j < 10; j++)
 	{
 		float yTranslate = j * 70;
 		for (size_t i = 0; i < 32; ++i)
@@ -21,19 +40,23 @@ Rasterizer::Rasterizer(unsigned int xResolution, unsigned int yResolution) :
 				20.0f + xTranslate, 60.f + yTranslate, -2.0f,
 				40.0f + xTranslate, 80.0f + yTranslate, -2.0f,
 				30.0f + xTranslate, 120.0f + yTranslate, -2.0f);
-			t.c = (255 << 16);
+			t.SortVertex();
+			t.color = (255 << 16);
 			m_mesh.push_back(t);
 		}
 	}
 	Triangle t(100.0f, 100.0f, -3.0f, 500.0f, 200.0f, -1.0f, 300.0f, 500.0f, -1.0f);
-	t.c = 255;
-	m_mesh.push_back(t);
+	t.SortVertex();
+	t.color = 255;
+	m_mesh.push_back(t);*/
 
 }
 
 Rasterizer::~Rasterizer()
 {
 	delete[] m_zbuffer;
+	delete[] m_screen;
+
 	//delete[] m_edgeTable;
 	//delete[] m_shapeTable;
 }
@@ -42,9 +65,9 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 {
 	for (size_t i = 0; i < m_mesh.size(); ++i)
 	{
-		Point &p0 = m_mesh[i].p0;
-		Point &p1 = m_mesh[i].p1;
-		Point &p2 = m_mesh[i].p2;
+		Point &p0 = m_mesh[i].p[0];
+		Point &p1 = m_mesh[i].p[1];
+		Point &p2 = m_mesh[i].p[2];
 
 		Vector v1 = p1 - p0;
 		Vector v2 = p2 - p0;
@@ -63,7 +86,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 		shapeTableItem.d = -p0.x * n.x - p0.y*n.y - p0.z*n.z;
 		shapeTableItem.id = i;
 		//color
-		shapeTableItem.color = m_mesh[i].c;
+		shapeTableItem.color = m_mesh[i].color;
 		shapeTableItem.dy = static_cast<int>(std::fmaxf(p1.y - p0.y, p2.y - p0.y)) + 1;
 		m_shapeTable[static_cast<int>(p0.y)].push_back(shapeTableItem);
 
@@ -97,7 +120,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 	}
 
 	// clear frame buffer
-	memset(pData, 0, m_xResolution*m_yResolution * sizeof(int32_t));
+	memset(m_screen, 0, m_xResolution*m_yResolution * sizeof(int32_t));
 
 	for (size_t y = 0; y < m_yResolution; ++y)
 	{
@@ -110,9 +133,9 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 			// add new shape
 			for (auto shapeItem : m_shapeTable[y])
 			{
-				ActiveShapeTableItem astItem;
+				/*ActiveShapeTableItem astItem;
 				astItem.dy = shapeItem.dy;
-				m_activeShapeTable.push_front(astItem);
+				m_activeShapeTable.push_front(astItem);*/
 
 				ActiveEdgeTableItem aetItem;
 				aetItem.id = shapeItem.id;
@@ -147,15 +170,15 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 		for (auto aetItemIter = m_activeEdgeTable.begin();aetItemIter != m_activeEdgeTable.end();)
 		{
 			float zValue = aetItemIter->zl;
-			for (int x = static_cast<int>(aetItemIter->xl); x <= static_cast<int>(aetItemIter->xr); ++x)
+			for (int x = static_cast<int>(aetItemIter->xl); x <= static_cast<int>(aetItemIter->xr) && x<m_xResolution; ++x)
 			{
 				// draw scanline
 				
-				// zValue > 0 must be cliped
-				if (zValue < 0 && (zValue > m_zbuffer[x] || m_zbuffer[x] == 0))
+				// zValue > 0 must be cliped, zValue -> (-2,0)
+				if (x > 0 && zValue < m_zbuffer[x])
 				{
 					m_zbuffer[x] = zValue;
-					pData[baseIndex + x] = aetItemIter->color;
+					m_screen[baseIndex + x] = aetItemIter->color;
 				}
 
 				zValue += aetItemIter->dzx;
@@ -194,7 +217,6 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 				continue;
 			}
 			aetItemIter->xl += aetItemIter->dxl;
-			// cautious!!
 			aetItemIter->xr += aetItemIter->dxr;
 			aetItemIter->zl += (aetItemIter->dxl*aetItemIter->dzx + aetItemIter->dzy);
 
@@ -202,12 +224,14 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 		}
 	}
 
+	memcpy(pData, m_screen, sizeof(int32_t)*m_xResolution*m_yResolution);
+
 	m_shapeTable.clear();
 	m_edgeTable.clear();
 
 	m_shapeTable.resize(m_yResolution);
 	m_edgeTable.resize(m_yResolution);
 	
-	m_activeShapeTable.clear();
+	//m_activeShapeTable.clear();
 	m_activeEdgeTable.clear();
 }

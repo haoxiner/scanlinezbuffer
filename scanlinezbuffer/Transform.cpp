@@ -91,3 +91,22 @@ Point Transform::operator*(const Point & p) const
 		m_matrix[1][0] * p.x + m_matrix[1][1] * p.y + m_matrix[1][2] * p.z + m_matrix[1][3],
 		m_matrix[2][0] * p.x + m_matrix[2][1] * p.y + m_matrix[2][2] * p.z + m_matrix[2][3]);
 }
+Transform Transform::Translate(const Vector &direction, const float distance)
+{
+	const Vector normDirection = Vector::Normalize(direction);
+	return Transform(
+		1.0f, 0.0f, 0.0f, normDirection.x*distance,
+		0.0f, 1.0f, 0.0f, normDirection.y*distance,
+		0.0f, 0.0f, 1.0f, normDirection.z*distance,
+		0.0f, 0.0f, 0.0f, 1.0f
+		);
+}
+Transform Transform::Translate(const float x,const float y,const float z)
+{
+	return Transform(
+		1.0f, 0.0f, 0.0f, x,
+		0.0f, 1.0f, 0.0f, y,
+		0.0f, 0.0f, 1.0f, z,
+		0.0f, 0.0f, 0.0f, 1.0f
+		);
+}
