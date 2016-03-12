@@ -27,7 +27,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 	for (auto shape : scene.shapes)
 	{
 		auto mesh = shape.mesh;
-		for (size_t i = 0; i < mesh.indices.size();)
+		for (size_t i = 0,colorIndex = 0; i < mesh.indices.size();++colorIndex)
 		{
 			auto v = 3*mesh.indices[i];
 			++i;
@@ -64,9 +64,7 @@ void Rasterizer::Render(const Scene &scene, const Camera &camera, int32_t *pData
 			if (accepted && t0.Check())
 			{
 				t0.SortVertex();
-				int intensity = static_cast<int>(static_cast<float>(rand()) / RAND_MAX * 255);
-				intensity = intensity > 10 ? intensity : 10;
-				t0.color = (intensity << 16 | intensity << 8 | intensity);
+				t0.color = scene.colorTable[colorIndex];
 				m_mesh.push_back(t0);
 			}
 		}

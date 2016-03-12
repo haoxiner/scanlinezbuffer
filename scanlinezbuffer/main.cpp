@@ -56,10 +56,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 	renderer = new Rasterizer(xResolution, yResolution);
 	InitializeDevice(hwnd);
 
-	//camera.LookAt(Point(0, 8, 130), Vector(0, 0, -1), Vector(0, 1, 0));
+	scene.Load("C:/Resource/goku3.obj");
+
+	camera.LookAt(Point(scene.center.x, scene.center.y, scene.center.z + 130), Vector(0, 0, -1), Vector(0, 1, 0));
 	float ratio = static_cast<float>(xResolution) / static_cast<float>(yResolution);
 	camera.Frustum(-ratio, ratio, 1, -1, 10.0f, 1000.0f);
-	scene.Load("C:/Resource/head.obj");
+	
 	eventOccured = true;
 	float x = 0, z = 0, angle = 0;
 
@@ -69,9 +71,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 		DispatchMessage(&msg);
 		if (eventOccured)
 		{
-			x = std::sinf(angle);
-			z = std::cosf(angle);
-			camera.LookAt(Point(0, 8, 200), Vector(0, 0, -1), Vector(x, z, 0));
+			//x = std::sinf(angle);
+			//z = std::cosf(angle);
+			/*camera.LookAt(Point(0, 8, 200), Vector(0, 0, -1), Vector(0, 1, 0));*/
 			renderer->Render(scene, camera, pBits);
 			angle += 0.01;
 		}

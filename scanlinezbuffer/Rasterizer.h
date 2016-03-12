@@ -54,9 +54,7 @@ private:
 	float *m_zbuffer;
 	unsigned int m_xResolution, m_yResolution;
 	int32_t *m_screen;
-
 	std::vector<std::vector<ShapeTableItem>> m_shapeTable;
 	std::vector<std::list<EdgeTableItem>> m_edgeTable;
 	std::list<ActiveEdgeTableItem> m_activeEdgeTable;
-
 };
