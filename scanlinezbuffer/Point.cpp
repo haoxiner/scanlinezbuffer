@@ -1,4 +1,5 @@
 #include "Point.h"
+
 Point::Point():x(0),y(0),z(0){}
 Point::Point(const float xx, const float yy, const float zz) :x(xx), y(yy), z(zz)
 {}

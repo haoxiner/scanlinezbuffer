@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include <list>
+
 #include "Triangle.h"
 
 class Scene;
@@ -23,11 +24,6 @@ struct EdgeTableItem
 	unsigned int dy;
 	unsigned int id;
 };
-
-//struct ActiveShapeTableItem
-//{
-//	unsigned int dy;
-//};
 
 struct ActiveEdgeTableItem
 {
@@ -60,8 +56,7 @@ private:
 	int32_t *m_screen;
 
 	std::vector<std::vector<ShapeTableItem>> m_shapeTable;
-	std::vector<std::vector<EdgeTableItem>> m_edgeTable;
-	//std::list<ActiveShapeTableItem> m_activeShapeTable;
+	std::vector<std::list<EdgeTableItem>> m_edgeTable;
 	std::list<ActiveEdgeTableItem> m_activeEdgeTable;
 
 };

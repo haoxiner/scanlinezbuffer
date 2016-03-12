@@ -11,6 +11,7 @@ static int32_t *pBits;
 static Rasterizer *renderer;
 static Scene scene;
 static Camera camera;
+static bool eventOccured;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void InitializeDevice(HWND hwnd);
@@ -50,16 +51,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 		hInstance,
 		nullptr);
 	ShowWindow(hwnd, iCmdShow);
-	UpdateWindow(hwnd);
+	//UpdateWindow(hwnd);
 
 	renderer = new Rasterizer(xResolution, yResolution);
 	InitializeDevice(hwnd);
+
+	//camera.LookAt(Point(0, 8, 130), Vector(0, 0, -1), Vector(0, 1, 0));
+	float ratio = static_cast<float>(xResolution) / static_cast<float>(yResolution);
+	camera.Frustum(-ratio, ratio, 1, -1, 10.0f, 1000.0f);
+	scene.Load("C:/Resource/head.obj");
+	eventOccured = true;
+	float x = 0, z = 0, angle = 0;
 
 	while (GetMessage(&msg,nullptr,0,0))
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-		renderer->Render(scene, camera, pBits);
+		if (eventOccured)
+		{
+			x = std::sinf(angle);
+			z = std::cosf(angle);
+			camera.LookAt(Point(0, 8, 200), Vector(0, 0, -1), Vector(x, z, 0));
+			renderer->Render(scene, camera, pBits);
+			angle += 0.01;
+		}
 	}
 	return msg.wParam;
 }

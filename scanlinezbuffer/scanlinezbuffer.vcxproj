@@ -144,8 +144,10 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="NewRasterizer.cpp" />
     <ClCompile Include="Point.cpp" />
     <ClCompile Include="Rasterizer.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="tinyobjloader.cpp" />
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Triangle.cpp" />
