@@ -6,8 +6,9 @@
 #include <cstdint>
 
 static const unsigned int xResolution = 1024, yResolution = 768;
+static float ratio;
 
-static const float MAX_DISTANCE = 1000;
+static const float MAX_DISTANCE = 5000;
 
 static int32_t *pBits;
 static Rasterizer *renderer;
@@ -25,12 +26,14 @@ static float phi;
 static bool rotate;
 static POINT previousMousePosition;
 static POINT mousePosition;
+static float x = 0, z = 0;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void InitializeDevice(HWND hwnd);
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR szCmdLine, int iCmdShow)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
 {
+	scene.LoadConfig("./config.txt");
 	HWND hwnd;
 	MSG msg;
 	WNDCLASS wndclass;
@@ -69,14 +72,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR szCmdLin
 	renderer = new Rasterizer(xResolution, yResolution);
 	InitializeDevice(hwnd);
 
-	scene.Load("./head.obj");
-	
 	//camera.LookAt(Point(scene.center.x+100,scene.center.y,scene.center.z + 100), Vector(-1, 0, -1), Vector(0, 1, 0));
-	float ratio = static_cast<float>(xResolution) / static_cast<float>(yResolution);
+	ratio = static_cast<float>(xResolution) / static_cast<float>(yResolution);
 	camera.Frustum(-ratio, ratio, 1, -1, 10.0f, MAX_DISTANCE);
 	
 	draw = true;
-	float x = 0, z = 0, y = 0;
+	
 	phi = 0;
 	float width = scene.boxMax.x - scene.boxMin.x;
 	float height = scene.boxMax.y - scene.boxMin.y;
@@ -164,6 +165,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 				distance += 5;
 			}
 		}
+		return 0;
+	case WM_KEYDOWN:
+		scene.switchNext();
+		phi = 0;
+		distance = std::fmaxf((scene.boxMax.x - scene.boxMin.x) * 10 / 2 / ratio, (scene.boxMax.y - scene.boxMin.y) * 10);
 		return 0;
 	case WM_DESTROY:
 		DeleteDC(screenDC);

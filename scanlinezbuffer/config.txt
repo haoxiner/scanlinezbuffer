@@ -1,0 +1,4 @@
+./head.obj
+./teapot.obj
+./goku3.obj
+./ship.obj
