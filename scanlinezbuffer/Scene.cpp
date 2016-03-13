@@ -49,22 +49,13 @@ void Scene::Load(const char * filepath)
 	center.z = (boxMax.z + boxMin.z) / 2;
 
 	colorTable.resize(faceCount / 3);
+	srand(0);
 	for (auto iter = colorTable.begin();iter != colorTable.end();++iter)
 	{
-		int r = static_cast<int>(static_cast<float>(rand()) / RAND_MAX * 255);
-		int g = static_cast<int>(static_cast<float>(rand()) / RAND_MAX * 255);
-		int b = static_cast<int>(static_cast<float>(rand()) / RAND_MAX * 255);
-		r = r > 10 ? r : 10;
-		g = g > 10 ? g : 10;
-		b = b > 10 ? b : 10;
+		int r = static_cast<int>(static_cast<float>(rand()) / RAND_MAX * 225 + 30);
+		int g = static_cast<int>(static_cast<float>(rand()) / RAND_MAX * 225 + 30);
+		int b = static_cast<int>(static_cast<float>(rand()) / RAND_MAX * 225 + 30);
 		*iter = (r << 16 | g << 8 | b);
 	}
-	/*int intensity = 0;
-	for (auto iter = colorTable.begin();iter != colorTable.end();++iter)
-	{
-		intensity = intensity % (256 - 50) + 50;
-		*iter = (intensity << 16 | intensity << 8 | intensity);
-		++intensity;
-	}*/
 }
 

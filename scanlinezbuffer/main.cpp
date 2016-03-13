@@ -7,16 +7,29 @@
 
 static const unsigned int xResolution = 1024, yResolution = 768;
 
+static const float MAX_DISTANCE = 1000;
+
 static int32_t *pBits;
 static Rasterizer *renderer;
 static Scene scene;
 static Camera camera;
-static bool eventOccured;
+static bool draw;
+
+static HBITMAP hBitmap;
+static BITMAPINFOHEADER bmih;
+static HDC screenDC;
+
+static float distance;
+static float angle;
+static float phi;
+static bool rotate;
+static POINT previousMousePosition;
+static POINT mousePosition;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void InitializeDevice(HWND hwnd);
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR szCmdLine, int iCmdShow)
 {
 	HWND hwnd;
 	MSG msg;
@@ -56,34 +69,38 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 	renderer = new Rasterizer(xResolution, yResolution);
 	InitializeDevice(hwnd);
 
-	scene.Load("C:/Resource/goku3.obj");
-
-	camera.LookAt(Point(scene.center.x, scene.center.y, scene.center.z + 130), Vector(0, 0, -1), Vector(0, 1, 0));
-	float ratio = static_cast<float>(xResolution) / static_cast<float>(yResolution);
-	camera.Frustum(-ratio, ratio, 1, -1, 10.0f, 1000.0f);
+	scene.Load("./head.obj");
 	
-	eventOccured = true;
-	float x = 0, z = 0, angle = 0;
+	//camera.LookAt(Point(scene.center.x+100,scene.center.y,scene.center.z + 100), Vector(-1, 0, -1), Vector(0, 1, 0));
+	float ratio = static_cast<float>(xResolution) / static_cast<float>(yResolution);
+	camera.Frustum(-ratio, ratio, 1, -1, 10.0f, MAX_DISTANCE);
+	
+	draw = true;
+	float x = 0, z = 0, y = 0;
+	phi = 0;
+	float width = scene.boxMax.x - scene.boxMin.x;
+	float height = scene.boxMax.y - scene.boxMin.y;
+	distance = std::fmaxf(width * 10 / 2 / ratio, height * 10);
 
 	while (GetMessage(&msg,nullptr,0,0))
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-		if (eventOccured)
+		x = distance*std::sinf(phi);
+		z = distance*std::cosf(phi);
+		camera.LookAt(Point(scene.center.x + x, scene.center.y, scene.center.z + z), Vector(scene.center.x - x, 0, scene.center.z - z), Vector(0, 1, 0));
+		renderer->Render(scene, camera, pBits);
+		if (draw)
 		{
-			//x = std::sinf(angle);
-			//z = std::cosf(angle);
-			/*camera.LookAt(Point(0, 8, 200), Vector(0, 0, -1), Vector(0, 1, 0));*/
-			renderer->Render(scene, camera, pBits);
-			angle += 0.01;
+			HDC hdc = GetDC(hwnd);
+			BitBlt(hdc, 0, 0, xResolution, yResolution, screenDC, 0, 0, SRCCOPY);
+			ReleaseDC(hwnd, hdc);
 		}
 	}
 	return msg.wParam;
 }
 
-static HBITMAP hBitmap;
-static BITMAPINFOHEADER bmih;
-static HDC screenDC;
+
 void InitializeDevice(HWND hwnd)
 {
 	HDC hdc;
@@ -114,12 +131,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		hdc = GetDC(hwnd);
 		BitBlt(hdc, 0, 0, xResolution, yResolution, screenDC, 0, 0, SRCCOPY);
 		ReleaseDC(hwnd, hdc);
+		draw = false;
+		return 0;
+	case WM_LBUTTONDOWN:
+		rotate = true;
+		return 0;
+	case WM_LBUTTONUP:
+		rotate = false;
+		return 0;
+	case WM_MOUSEMOVE:
+		mousePosition.x = LOWORD(lParam);
+		mousePosition.y = HIWORD(lParam);
+		if (rotate)
+		{
+			int speed = mousePosition.x - previousMousePosition.x;
+			phi += 0.002*speed;
+		}
+		previousMousePosition = mousePosition;
+		return 0;
+	case WM_MOUSEWHEEL:
+		if ((short)HIWORD(wParam) > 0)
+		{
+			if (distance > 5)
+			{
+				distance -= 5;
+			}
+		}
+		else
+		{
+			if (distance <= MAX_DISTANCE - 5)
+			{
+				distance += 5;
+			}
+		}
 		return 0;
 	case WM_DESTROY:
 		DeleteDC(screenDC);
 		PostQuitMessage(0);
 		return 0;
 	default:
+		draw = true;
 		return DefWindowProc(hwnd, message, wParam, lParam);
 	}
 }

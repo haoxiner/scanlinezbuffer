@@ -9,15 +9,26 @@ Camera::Camera()
 void Camera::LookAt(const Point position, const Vector & gaze, const Vector & up)
 {
 	// right-hand coordinate
-	Vector eRight = Vector::Normalize(Vector::Cross(gaze, up));
-	Vector eUp = Vector::Normalize(Vector::Cross(eRight, gaze));
 	Vector eGaze = -Vector::Normalize(gaze);
-
-	m_view.SetMatrix(
+	Vector eRight = Vector::Normalize(Vector::Cross(eGaze, up));
+	Vector eUp = Vector::Normalize(Vector::Cross(eRight, eGaze));
+	
+	Transform translate(
+		1, 0, 0, -position.x,
+		0, 1, 0, -position.y,
+		0, 0, 1, -position.z,
+		0, 0, 0, 1);
+	Transform rotate(
+		eRight.x, eUp.x, eGaze.x, 0,
+		eRight.y, eUp.y, eGaze.y, 0,
+		eRight.z, eUp.z, eGaze.z, 0,
+		0, 0, 0, 1);
+	m_view = rotate*translate;
+	/*m_view.SetMatrix(
 		eRight.x, eUp.x, eGaze.x, -position.x,
 		eRight.y, eUp.y, eGaze.y, -position.y,
 		eRight.z, eUp.z, eGaze.z, -position.z,
-		0, 0, 0, 1);
+		0, 0, 0, 1);*/
 }
 
 void Camera::Frustum(const float l, const float r, const float t, const float b, const float n, const float f)
